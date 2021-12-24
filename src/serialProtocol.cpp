@@ -51,14 +51,15 @@ bool serialProtocol::isCMDValid(uint8_t key)
 {
     if ( this->keyWord == NULL )
         return false;
-    for(uint8_t i=0; i<sizeof(this->keyWord); i++)
+    for(uint8_t i=0; i<this->key_len; i++)
     {
-        uint8_t k = this->keyWord[i];
+        uint8_t k = (uint8_t)this->keyWord[i];
         if(key==k)
             return true;
     }
     return false;
 }
+
 
 bool serialProtocol::isPackageValid(const uint8_t* raw, uint8_t length, CMD_Identifier* ret)
 {
@@ -67,10 +68,8 @@ bool serialProtocol::isPackageValid(const uint8_t* raw, uint8_t length, CMD_Iden
     uint8_t proc = 0;
     int byte_left =0;
     uint32_t CRC_calc=0;
-    SERIAL_P.println( F("data raw : "));
     while(loc<length)
     {
-        SERIAL_P.print( (uint8_t)raw[loc] ); SERIAL_P.print(F("\t"));
         // printf("data raw : %d \r\n", raw[loc]);
         if( raw[loc] != 0x00  || loc < length) // compare with NULL
         {
@@ -79,7 +78,6 @@ bool serialProtocol::isPackageValid(const uint8_t* raw, uint8_t length, CMD_Iden
                 case 0 :    // looking for header
                         if( raw[loc] == COM_HEADER )
                         {
-                            // printf("found header\r\n");
                             ret->header=loc;
                             proc++;
                         }
@@ -87,7 +85,6 @@ bool serialProtocol::isPackageValid(const uint8_t* raw, uint8_t length, CMD_Iden
                 case 1 :    // looking for key_word
                         if( this->isCMDValid(raw[loc]) )
                         {
-                            // printf("found command\r\n");
                             ret->cmd=raw[loc];
                             proc++;
                         }
@@ -129,11 +126,11 @@ bool serialProtocol::isPackageValid(const uint8_t* raw, uint8_t length, CMD_Iden
                         ret->CRC32_ = (ret->CRC32_ << 8) | raw[loc+2];
                         ret->CRC32_ = (ret->CRC32_ << 8) | raw[loc+3];
                         CRC_calc = this->crc32((const char *)ret->dataRaw,ret->data_length);
-                        SERIAL_P.println("");
-                        SERIAL_P.print("data CRC = ");
-                        SERIAL_P.println(ret->CRC32_,HEX);
-                        SERIAL_P.print("data CRC from calculate : ");
-                        SERIAL_P.println(CRC_calc,HEX);
+                        // mySer.println("");
+                        // mySer.print("data CRC = ");
+                        // mySer.println(ret->CRC32_,HEX);
+                        // mySer.print("data CRC from calculate : ");
+                        // mySer.println(CRC_calc,HEX);
                         if( CRC_calc != ret->CRC32_ )
                             return false;
                         proc++;
@@ -204,7 +201,7 @@ uint8_t serialProtocol::createPackage(byte CMD, uint8_t nack_ack, uint8_t* raw, 
     this->uint32To4bytes(CRC32_, crcByte);
     for(uint8_t l=0; l<4; l++)
     {
-        package_[3+len+l] = crcByte[0];    
+        package_[3+len+l] = crcByte[l];    
     }
     // NACK/ACK
     package_[3+len+4] = nack_ack;
@@ -229,6 +226,7 @@ bool serialProtocol::updatePackage(const char* dataRaw, uint8_t len)
                 }
             }
         }
+        // mySer.println("FOUND CMD !");
         return true;
     }
     else

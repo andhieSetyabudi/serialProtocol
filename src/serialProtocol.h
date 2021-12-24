@@ -122,6 +122,12 @@ class serialProtocol
         // update screening data
         bool updatePackage(const char* dataRaw, uint8_t len);
 
+        template <typename T, size_t size_>
+        bool updatePackage(T(&series)[size_])
+        {
+            return updatePackage(series,size_);
+        }
+        
         // return of variable
         uint8_t getCurrentCMD(void)             { return this->local_ident.cmd; }
         uint8_t getDataLength(void)             { return this->local_ident.data_length; }
