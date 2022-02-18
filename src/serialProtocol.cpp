@@ -215,6 +215,7 @@ bool serialProtocol::updatePackage(const char* dataRaw, uint8_t len)
     this->local_ident = {0};
     if( this->isPackageValid((const uint8_t*)dataRaw, len, &this->local_ident) )
     {
+        this->local_ident.total_length = this->local_ident.data_location+this->local_ident.data_length+6;
         if ( this->keyWord != NULL && this->ptr_ != NULL && this->key_len!= 0 )
         { // execute your void raw
             for(uint8_t loc_ptr = 0; ( loc_ptr < this->ptr_len && this->ptr_!=NULL ); loc_ptr++)
@@ -226,7 +227,6 @@ bool serialProtocol::updatePackage(const char* dataRaw, uint8_t len)
                 }
             }
         }
-        // mySer.println("FOUND CMD !");
         return true;
     }
     else
